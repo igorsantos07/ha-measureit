@@ -6,7 +6,8 @@
         "description": "Thanks for setting up MeasureIt! If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-measureit.\nTime measures the duration while a condition (template) equals true. Source will measure the value changes of another entity, while a condition (template) equals true.",
         "menu_options": {
           "time": "Time",
-          "source": "Source sensor"
+          "source": "Source sensor",
+          "count": "Number of state changes of an entity (count)"
         }
       },
       "time": {
@@ -18,7 +19,15 @@
       },
       "source": {
         "title": "Configure source meter",
-        "description": "Configure the configuration name (used for sensor names and logging), the source to measure and the unit of the measurement.",
+        "description": "Configure the configuration name (used for sensor names and logging) and the source sensor to measure.",
+        "data": {
+          "config_name": "Configuration name",
+          "source_entity": "Source entity"
+        }
+      },
+      "count": {
+        "title": "Configure state change counter",
+        "description": "Configure the configuration name (used for sensor names and logging) and the source entity to monitor for state changes.",
         "data": {
           "config_name": "Configuration name",
           "source_entity": "Source entity"

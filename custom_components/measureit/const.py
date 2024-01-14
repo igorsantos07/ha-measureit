@@ -36,6 +36,7 @@ CONF_INDEX = "index"
 
 METER_TYPE_TIME = "time"
 METER_TYPE_SOURCE = "source"
+METER_TYPE_COUNT = "count"
 
 # Attributes
 ATTR_PREV = "prev_period"

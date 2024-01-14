@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CONDITION, CONF_CONFIG_NAME, SOURCE_ENTITY_ID
+from .const import CONF_CONDITION, CONF_CONFIG_NAME, METER_TYPE_COUNT, SOURCE_ENTITY_ID
 from .const import CONF_METER_TYPE
 from .const import CONF_SOURCE
 from .const import CONF_TW_DAYS
@@ -51,6 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if meter_type == METER_TYPE_TIME:
         value_callback = get_time_value
+    elif meter_type == METER_TYPE_COUNT:
+        return True # TODO: implement meter type count
     elif meter_type == METER_TYPE_SOURCE:
         registry = er.async_get(hass)
 

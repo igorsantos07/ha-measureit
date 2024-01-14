@@ -46,6 +46,7 @@ from .const import (
     CONF_TW_TILL,
     DOMAIN,
     LOGGER,
+    METER_TYPE_COUNT,
     METER_TYPE_SOURCE,
     METER_TYPE_TIME,
     PREDEFINED_PERIODS,
@@ -130,6 +131,13 @@ async def validate_source_config(
 ) -> dict[str, Any]:
     """Validate source config."""
     user_input[CONF_METER_TYPE] = METER_TYPE_SOURCE
+    return user_input
+
+async def validate_count_config(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate source config."""
+    user_input[CONF_METER_TYPE] = METER_TYPE_COUNT
     return user_input
 
 
@@ -287,12 +295,14 @@ SENSORS_CONFIG = {
 }
 
 DATA_SCHEMA_TIME = vol.Schema(MAIN_CONFIG)
+# DATA_SCHEMA_SOURCE is also used for counting state changes of a source sensor
 DATA_SCHEMA_SOURCE = vol.Schema(
     {
         **MAIN_CONFIG,
         vol.Required(CONF_SOURCE): selector.EntitySelector(),
     }
 )
+
 DATA_SCHEMA_WHEN = vol.Schema(WHEN_CONFIG)
 DATA_SCHEMA_EDIT_SENSOR = vol.Schema(
     {vol.Required(CONF_SENSOR_NAME): selector.TextSelector(), **SENSOR_CONFIG}
@@ -310,7 +320,7 @@ DATA_SCHEMA_THANK_YOU = vol.Schema({})
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowMenuStep(["time", "source"]),
+    "user": SchemaFlowMenuStep(["time", "source", "count"]),
     "time": SchemaFlowFormStep(
         schema=DATA_SCHEMA_TIME,
         next_step="when",
@@ -320,6 +330,11 @@ CONFIG_FLOW = {
         schema=DATA_SCHEMA_SOURCE,
         next_step="when",
         validate_user_input=validate_source_config,
+    ),
+     "count": SchemaFlowFormStep(
+        schema=DATA_SCHEMA_SOURCE,
+        next_step="when",
+        validate_user_input=validate_count_config,
     ),
     "when": SchemaFlowFormStep(
         schema=DATA_SCHEMA_WHEN,
