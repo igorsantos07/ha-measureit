@@ -1,7 +1,5 @@
 """Constants for MeasureIt."""
-from logging import Logger, getLogger
-
-LOGGER: Logger = getLogger(__package__)
+from enum import Enum
 
 NAME = "MeasureIt"
 DOMAIN = "measureit"
@@ -52,3 +50,10 @@ PREDEFINED_PERIODS = {
     "year": "0 0 1 1 *",
     "forever": "none",
 }
+
+class MeterType(str, Enum):
+    """Enum with possible meter states."""
+
+    TIME = "time"
+    SOURCE = "source"
+    COUNT = "count"
