@@ -1,5 +1,6 @@
 """Data class for reading data."""
 from datetime import datetime
+from decimal import Decimal
 from dataclasses import dataclass
 
 
@@ -10,4 +11,4 @@ class ReadingData:
     reading_datetime: datetime = None
     template_active: bool = None
     timewindow_active: bool = None
-    value: float = None
+    value: Decimal = None
