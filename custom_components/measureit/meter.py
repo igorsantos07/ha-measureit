@@ -21,6 +21,7 @@ class Meter:
         """Initialize meter."""
         self.state: MeterState = MeterState.INITIALIZING
         self.measured_value: Decimal = 0
+
         self.prev_measured_value: Decimal = 0
         self._session_start_reading: Decimal | None = None
         self._start_measured_value: Decimal | None = None

@@ -33,6 +33,22 @@ def test_start_on_first_reading():
     assert meter._start_measured_value == 0
 
 
+def test_do_not_start_on_first_reading_when_waiting():
+    """Test if meter does not start measuring after the first reading when waiting for condition."""
+    meter = Meter()
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), False, True, 100))
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), False, True, 120))
+    assert meter.measured_value == 0
+    assert meter.state == MeterState.WAITING_FOR_CONDITION
+    assert meter._session_start_reading is None
+    assert meter._start_measured_value is None
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), True, True, 150))
+    assert meter.measured_value == 0
+    assert meter.state == MeterState.MEASURING
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), False, True, 160))
+    assert meter.measured_value == 10
+
+
 @pytest.mark.parametrize(
     "reading, expected_measured_value",
     [
@@ -61,6 +77,82 @@ def test_update_measured_value(reading, expected_measured_value):
     meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), True, True, 100))
     meter.update(reading)
     assert meter.measured_value == expected_measured_value
+
+
+def test_switch_to_waiting_for_condition():
+    """Test switching to waiting for condition."""
+    meter = Meter()
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), True, True, 100))
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), False, True, 125))
+    assert meter.measured_value == 25
+    assert meter.state == MeterState.WAITING_FOR_CONDITION
+
+
+def test_switch_to_waiting_for_time_window():
+    """Test switching to waiting for time window."""
+    meter = Meter()
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), True, True, 100))
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), True, False, 125))
+    assert meter.measured_value == 25
+    assert meter.state == MeterState.WAITING_FOR_TIME_WINDOW
+
+
+def test_continued_updates_after_waiting_for_condition():
+    """Test continued updates after waiting for condition."""
+    meter = Meter()
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), True, True, 100))
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), False, True, 125))
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), False, True, 128))
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 7, tzinfo=TZ), True, True, 130))
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 7, tzinfo=TZ), True, True, 140))
+    assert meter.measured_value == 35
+    assert meter.state == MeterState.MEASURING
+
+
+def test_continued_updates_after_combined_waiting():
+    meter = Meter()
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), True, True, 100))
+    meter.update(
+        ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), False, True, 125)
+    )  # waiting for condition
+    meter.update(
+        ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), True, False, 128)
+    )  # waiting for time window
+    meter.update(
+        ReadingData(datetime(2022, 1, 1, 11, 7, tzinfo=TZ), True, True, 130)
+    )  # continue
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 7, tzinfo=TZ), True, True, 140))
+    assert meter.measured_value == 35
+    assert meter.state == MeterState.MEASURING
+
+
+def test_reset_while_measuring():
+    """Test resetting a meter."""
+    meter = Meter()
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), True, True, 100))
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), True, True, 125))
+    meter.reset()
+    assert meter.measured_value == 0
+    assert meter.prev_measured_value == 25
+    assert meter.state == MeterState.MEASURING
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), True, True, 130))
+    assert meter.measured_value == 5
+
+
+def test_reset_while_waiting_for_condition():
+    """Test resetting a meter."""
+    meter = Meter()
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 5, tzinfo=TZ), True, True, 100))
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), True, False, 125))
+    meter.reset()
+    assert meter.measured_value == 0
+    assert meter.prev_measured_value == 25
+    assert meter.state == MeterState.WAITING_FOR_TIME_WINDOW
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), True, True, 130))
+    assert meter.measured_value == 0
+    meter.update(ReadingData(datetime(2022, 1, 1, 11, 6, tzinfo=TZ), True, True, 135))
+    assert meter.measured_value == 5
+    assert meter.prev_measured_value == 25
 
 
 # def test_heartbeat(meter: Meter):
