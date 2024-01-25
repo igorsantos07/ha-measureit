@@ -30,8 +30,10 @@ class Meter:
         self._time_window_active: bool = False
         self._last_reading_value: Decimal | None = None
 
-    def reset(self):
+    def reset(self, reset_reading: ReadingData | None = None):
         """Reset the meter."""
+        if reset_reading and self.state == MeterState.MEASURING:
+            self.update(reset_reading)
         self.prev_measured_value, self.measured_value = self.measured_value, 0
         self._session_start_reading = self._last_reading_value
         self._start_measured_value = self.measured_value
